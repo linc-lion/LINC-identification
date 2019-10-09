@@ -1,0 +1,109 @@
+import json
+from pathlib import Path
+
+import numpy as np
+import torch
+from fastai.callbacks.hooks import hook_output
+from fastai.vision import ImageList, imagenet_stats, load_learner
+from fastai.widgets import DatasetFormatter
+from scipy.special import softmax
+from sklearn.neighbors import KNeighborsClassifier
+
+from config import configuration
+
+
+def get_embeddings(learn, fix_dl, **kwargs):
+    hook = hook_output(list(learn.model.modules())[-3])
+    actns = DatasetFormatter.get_actns(learn, hook=hook, dl=fix_dl, **kwargs)
+
+    return actns
+
+
+def get_neighbors(nearest_neighbors, nearest_distances, n):
+    k_neighbors = []
+    for neighbors, distances in zip(nearest_neighbors, nearest_distances):
+        lion_neighbors = []
+        neighbor_dists = []
+        for neighbor, distance in zip(neighbors, distances):
+            if neighbor not in lion_neighbors:
+                lion_neighbors.append(neighbor)
+                neighbor_dists.append(1 / distance)
+            if len(lion_neighbors) >= n:
+                break
+        neighbor_dists = softmax(neighbor_dists)
+        neighbors_map = dict(zip(lion_neighbors, neighbor_dists))
+        k_neighbors.append(neighbors_map)
+    return k_neighbors
+
+
+def get_top_n(emb_gal, label_gal, emb_probes, lion_subset, n):
+
+    emb_subset = emb_gal[np.isin(label_gal, lion_subset)]
+    label_subset = label_gal[np.isin(label_gal, lion_subset)]
+
+    knn_classifier = KNeighborsClassifier(n_neighbors=5, n_jobs=-1)
+    knn_classifier.fit(emb_subset, label_subset)
+
+    nearest_neighbors = knn_classifier.kneighbors(emb_probes, n_neighbors=20, return_distance=True)
+
+    topN = get_neighbors(label_subset[nearest_neighbors[1]], nearest_neighbors[0], n)
+
+    return topN
+
+
+def predict(query_image_set_path, n, lion_subset=None):
+
+    # Load the model
+    learn = load_learner(configuration["FACE_MODEL_PATH"])
+
+    images_path = Path(query_image_set_path)
+    gallery_path = Path(configuration["GALLERY_PATH"])
+
+    # Load the database
+    disk_embeddings = torch.load(gallery_path / "embeddings.pt")
+    disk_labels = torch.load(gallery_path / "labels.pt")
+
+    if lion_subset is None:
+        # If None search over all lions.
+        lion_subset = disk_labels
+
+    # Load incoming images
+    incoming_data = (
+        ImageList.from_folder(images_path)
+        .split_none()
+        .label_empty()
+        .transform(None, size=224)
+        .databunch()
+        .normalize(imagenet_stats)
+    )
+
+    # Get embeddings from incoming images
+    fixed_dl = incoming_data.train_dl.new(shuffle=False, drop_last=False)
+    incoming_embeddings = get_embeddings(learn, fixed_dl, pool=None)
+
+    # Get predictions
+    return get_top_n(disk_embeddings, disk_labels, incoming_embeddings, lion_subset, n)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="LINC Face Prediction")
+    parser.add_argument(
+        "query_image_set_path", help="Path to the folder containing the labeled images"
+    )
+    parser.add_argument("n", default=3, help="How many lions to retrive per image.")
+    parser.add_argument(
+        "--lion_subset",
+        default=None,
+        help="Comma separated list of the lion ids to be matched agianst. Searches over all database by default.",
+    )
+    args = parser.parse_args()
+
+    lion_subset = (
+        [int(lion_id) for lion_id in args.lion_subset.split(",")] if args.lion_subset else None
+    )
+
+    results = predict(args.query_image_set_path, float(args.n), lion_subset)
+
+    print(results)
