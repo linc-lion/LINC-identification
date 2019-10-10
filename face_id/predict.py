@@ -1,22 +1,13 @@
-import json
 from pathlib import Path
 
 import numpy as np
 import torch
-from fastai.callbacks.hooks import hook_output
 from fastai.vision import ImageList, imagenet_stats, load_learner
-from fastai.widgets import DatasetFormatter
 from scipy.special import softmax
 from sklearn.neighbors import KNeighborsClassifier
 
 from config import configuration
-
-
-def get_embeddings(learn, fix_dl, **kwargs):
-    hook = hook_output(list(learn.model.modules())[-3])
-    actns = DatasetFormatter.get_actns(learn, hook=hook, dl=fix_dl, **kwargs)
-
-    return actns
+from utils import get_embeddings
 
 
 def get_neighbors(nearest_neighbors, nearest_distances, n):
@@ -73,7 +64,7 @@ def predict(query_image_set_path, n, lion_subset=None):
         .split_none()
         .label_empty()
         .transform(None, size=224)
-        .databunch()
+        .databunch(bs=1)
         .normalize(imagenet_stats)
     )
 
