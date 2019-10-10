@@ -21,11 +21,9 @@ filters = {
 }
 
 
-def main(input_path, output_path, cv_model_path, force_cpu, transform, filter_type):
+def dataset_generator(input_path, output_path, cv_model_path, force_cpu, transform, filter_type):
 
     filter_labels = filters[filter_type]
-
-    print(input_path, output_path, cv_model_path, force_cpu, transform, filter_labels)
 
     # Load Model
 
@@ -86,16 +84,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--transform",
         default=0,
+        type=int,
         help="Select alignment and crop: 0-None, 1-Align eyes, 2-Align eyes + zoom",
     )
     parser.add_argument(
         "--filter",
         default=1,
+        type=int,
         help="Select which filter to apply: 0-only frontal, 1-frontal & diagonal, 2-all images",
     )
     args = parser.parse_args()
 
-    main(
+    dataset_generator(
         args.input_path,
         args.output_path,
         args.model_checkpoint_path,

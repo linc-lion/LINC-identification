@@ -46,10 +46,12 @@ if __name__ == "__main__":
         "--min_images",
         default=3,
         help="The minimum amount of images required for a lion to be used.",
+        type=int,
     )
     parser.add_argument(
         "--train_size",
         default=0.8,
+        type=float,
         help="Proportion of the dataset to include in the train split (between 0 and 1).",
     )
     args = parser.parse_args()
