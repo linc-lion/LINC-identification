@@ -2,13 +2,17 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from fastai.torch_core import defaults
 from fastai.vision import ImageList, imagenet_stats, load_learner
 
 from config import configuration
 from utils import get_embeddings, get_image_ids
 
 
-def add_new_lions(new_lions_path, output_gallery_path):
+def add_new_lions(new_lions_path, output_gallery_path, force_cpu=False):
+    defaults.device = (
+        torch.device("cuda") if torch.cuda.is_available() and not force_cpu else torch.device("cpu")
+    )
 
     # Load the model
     learn = load_learner(configuration["FACE_MODEL_PATH"])
@@ -58,6 +62,7 @@ if __name__ == "__main__":
         "output_gallery_path",
         help="Path to the destination where the new gallery is going to be created",
     )
+    parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
     args = parser.parse_args()
 
-    add_new_lions(args.new_lions_path)
+    add_new_lions(args.new_lions_path, args.output_gallery_path, args.cpu)

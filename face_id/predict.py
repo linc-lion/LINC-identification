@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from fastai.torch_core import defaults
 from fastai.vision import ImageList, imagenet_stats, load_learner
 from scipy.special import softmax
 from sklearn.neighbors import KNeighborsClassifier
@@ -42,7 +43,10 @@ def get_top_n(emb_gal, label_gal, emb_probes, lion_subset, n):
     return topN
 
 
-def predict(query_image_set_path, n, lion_subset=None):
+def predict(query_image_set_path, n, lion_subset=None, force_cpu=False):
+    defaults.device = (
+        torch.device("cuda") if torch.cuda.is_available() and not force_cpu else torch.device("cpu")
+    )
 
     # Load the model
     learn = load_learner(configuration["FACE_MODEL_PATH"])
@@ -89,12 +93,14 @@ if __name__ == "__main__":
         default=None,
         help="Comma separated list of the lion ids to be matched agianst. Searches over all database by default.",
     )
+    parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
+
     args = parser.parse_args()
 
     lion_subset = (
         [int(lion_id) for lion_id in args.lion_subset.split(",")] if args.lion_subset else None
     )
 
-    results = predict(args.query_image_set_path, float(args.n), lion_subset)
+    results = predict(args.query_image_set_path, float(args.n), lion_subset, args.cpu)
 
     print(results)
