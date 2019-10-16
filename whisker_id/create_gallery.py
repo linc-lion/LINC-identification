@@ -8,7 +8,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from linc_detection.models import detection
-from utils import whisker_detector_predict
+from utils import get_image_ids, whisker_detector_predict
 
 
 def create_gallery(data_path, output_path, whisker_spot_model_path, force_cpu=False):
@@ -56,8 +56,11 @@ def create_gallery(data_path, output_path, whisker_spot_model_path, force_cpu=Fa
                         right_whiskers.append(predictions)
                         right_labels.append(int(lion.name))
 
-    torch.save((np.array(left_whiskers), np.array(left_labels)), output_path / "left_data.pt")
-    torch.save((np.array(right_whiskers), np.array(right_labels)), output_path / "right_data.pt")
+    gallery_path = output_path / "gallery"
+    gallery_path.mkdir()
+    torch.save(get_image_ids(data_path), gallery_path / "image_ids.pt")
+    torch.save((np.array(left_whiskers), np.array(left_labels)), gallery_path / "left_data.pt")
+    torch.save((np.array(right_whiskers), np.array(right_labels)), gallery_path / "right_data.pt")
 
     print("Done.")
 
