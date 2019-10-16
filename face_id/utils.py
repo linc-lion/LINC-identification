@@ -14,7 +14,8 @@ def get_embeddings(learn, fix_dl, **kwargs):
 
 def get_image_ids(input_path, image_ids=defaultdict(list)):
     for image_path in input_path.rglob("*.jpg"):
-        image_ids[int(image_path.parent.name)].append(
-            int(re.search(r"image_(\d*)", image_path.name).group(1))
-        )
+        lion_images = image_ids[int(image_path.parent.name)]
+        image_id = int(re.search(r"image_(\d*)", image_path.name).group(1))
+        if image_id not in lion_images:
+            lion_images.append(image_id)
     return image_ids
