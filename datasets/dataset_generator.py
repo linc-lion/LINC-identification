@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "output_path", default="./new_dataset/", help="Path to destination of the new dataset"
     )
     parser.add_argument(
-        "model_checkpoint_path", help="Path of checkpoint of model to load into network"
+        "model_checkpoint_path", help="Path to the body parts object detector checkpoint"
     )
     parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
     parser.add_argument(
