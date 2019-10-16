@@ -2,25 +2,22 @@ import random
 import shutil
 from pathlib import Path
 
-train_size = 0.8
-min_images = 1
-
-root_ds = Path("/home/mauto/data/LincParse/eval_lions_zoom")
-
 
 def main(input_path, min_images, train_size):
-    train_root = root_ds.joinpath("train")
+    input_path = Path(input_path)
+
+    train_root = input_path.joinpath("train")
     train_root.mkdir()
-    val_root = root_ds.joinpath("valid")
+    val_root = input_path.joinpath("valid")
     val_root.mkdir()
-    not_used_root = root_ds.joinpath("not_used")
+    not_used_root = input_path.joinpath("not_used")
     not_used_root.mkdir()
 
-    for lion_dir in root_ds.iterdir():
+    for lion_dir in input_path.iterdir():
         if lion_dir.name not in ["train", "valid", "not_used"]:
             lion_imgs = list(lion_dir.iterdir())
             if len(lion_imgs) <= min_images:
-                shutil.move(str(lion_dir), root_ds.joinpath("not_used"))
+                shutil.move(str(lion_dir), input_path.joinpath("not_used"))
             else:
                 random.shuffle(lion_imgs)
                 idx_limit = int(train_size * len(lion_imgs))
