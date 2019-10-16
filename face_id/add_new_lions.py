@@ -2,27 +2,25 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from fastai.torch_core import defaults
 from fastai.vision import ImageList, imagenet_stats, load_learner
 
-from config import configuration
 from utils import get_embeddings, get_image_ids
 
 
-def add_new_lions(new_lions_path, output_gallery_path, force_cpu=False):
-    defaults.device = (
-        torch.device("cuda") if torch.cuda.is_available() and not force_cpu else torch.device("cpu")
-    )
+def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
 
     # Load the model
-    learn = load_learner(configuration["FACE_MODEL_PATH"])
+    print("Loading model...")
+    model_path = Path(model_path)
+    learn = load_learner(model_path.parent, model_path.name)
 
     images_path = Path(new_lions_path)
 
-    output_path = Path(output_gallery_path) / "gallery"
-    gallery_path = Path(configuration["GALLERY_PATH"])
+    output_path = Path(output_path)
+    gallery_path = Path(gallery_path)
 
     # Load the database
+    print("Loading gallery...")
     disk_embeddings = torch.load(gallery_path / "embeddings.pt")
     disk_image_ids = torch.load(gallery_path / "image_ids.pt")
     disk_labels = torch.load(gallery_path / "labels.pt")
@@ -33,11 +31,12 @@ def add_new_lions(new_lions_path, output_gallery_path, force_cpu=False):
         .split_none()
         .label_from_folder()
         .transform(None, size=224)
-        .databunch()
+        .databunch(bs=1)
         .normalize(imagenet_stats)
     )
 
     # Get embeddings from incoming images
+    print("Getting embeddings...")
     fixed_dl = incoming_data.train_dl.new(shuffle=False, drop_last=False)
     incoming_embeddings = get_embeddings(learn, fixed_dl, pool=None)
     incoming_labels = np.array(incoming_data.train_ds.y.classes)[incoming_data.train_ds.y.items]
@@ -52,6 +51,8 @@ def add_new_lions(new_lions_path, output_gallery_path, force_cpu=False):
     torch.save(new_image_ids, output_path / "image_ids.pt")
     torch.save(new_labels, output_path / "labels.pt")
 
+    print(f"Lions ${incoming_data.train_ds.y.classes} successfully added/updated!")
+
 
 if __name__ == "__main__":
     import argparse
@@ -59,10 +60,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LINC add new lions")
     parser.add_argument("new_lions_path", help="Path to the folder containing the labeled images")
     parser.add_argument(
-        "output_gallery_path",
-        help="Path to the destination where the new gallery is going to be created",
+        "output_path", help="Path to the destination where the new gallery is going to be created"
     )
-    parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
+    parser.add_argument("model_path", help="Path to the pickle of the model")
+    parser.add_argument(
+        "gallery_path",
+        help="Path to the folder containing the gallery: embeddings.pt, image_ids.pt and labels.pt",
+    )
     args = parser.parse_args()
 
-    add_new_lions(args.new_lions_path, args.output_gallery_path, args.cpu)
+    add_new_lions(args.new_lions_path, args.output_path, args.model_path, args.gallery_path)

@@ -2,14 +2,19 @@ from pathlib import Path
 
 import torch
 
-from config import configuration
 
-
-def capabilities():
-    gallery_path = Path(configuration["GALLERY_PATH"])
+def capabilities(gallery_path):
+    gallery_path = Path(gallery_path)
     return torch.load(gallery_path / "image_ids.pt")
 
 
 if __name__ == "__main__":
+    import argparse
 
-    print(capabilities())
+    parser = argparse.ArgumentParser(description="LINC capabilities")
+    parser.add_argument(
+        "gallery_path",
+        help="Path to the folder containing the gallery: embeddings.pt, image_ids.pt and labels.pt",
+    )
+    args = parser.parse_args()
+    print(capabilities(args.gallery_path))
