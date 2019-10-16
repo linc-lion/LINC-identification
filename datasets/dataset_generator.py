@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 
@@ -7,8 +8,7 @@ from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
 from linc_detection.models import detection
-
-from .utils import preprocess_image
+from utils import preprocess_image
 
 convert_to_pil = torchvision.transforms.ToPILImage()
 
@@ -21,7 +21,9 @@ filters = {
 }
 
 
-def dataset_generator(input_path, output_path, cv_model_path, force_cpu, transform, filter_type):
+def dataset_generator(
+    input_path, output_path, cv_model_path, force_cpu=False, transform=2, filter_type=1
+):
 
     filter_labels = filters[filter_type]
 
@@ -54,7 +56,8 @@ def dataset_generator(input_path, output_path, cv_model_path, force_cpu, transfo
     deleted_images = []
 
     print("Creating dataset...")
-    output_path = Path(output_path)
+    output_path = Path(output_path) / "dataset-{}".format(datetime.today().strftime("%m-%d-%y"))
+    output_path.mkdir()
 
     for idx, (image, label) in enumerate(tqdm(image_ds)):
         if image is not None:
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
     parser.add_argument(
         "--transform",
-        default=0,
+        default=2,
         type=int,
         help="Select alignment and crop: 0-None, 1-Align eyes, 2-Align eyes + zoom",
     )
