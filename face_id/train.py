@@ -1,9 +1,9 @@
-from functools import partial
+import time
+from datetime import datetime
 from pathlib import Path
 
 import torch
-from fastai.callbacks import EarlyStoppingCallback, SaveModelCallback
-from fastai.torch_core import defaults
+from fastai.callbacks import SaveModelCallback
 from fastai.vision import (
     ImageDataBunch,
     accuracy,
@@ -17,41 +17,31 @@ from fastai.vision import (
 from utils import get_embeddings, get_image_ids
 
 
-def train(data_path, output_path, create_gallery=True, force_cpu=False):
+def train(data_path, output_path, create_gallery=True):
 
-    defaults.device = (
-        torch.device("cuda") if torch.cuda.is_available() and not force_cpu else torch.device("cpu")
-    )
-
+    print("Loading data...")
     data_path = Path(data_path)
-    output_path = Path(output_path)
+    output_path = Path(output_path) / datetime.today().strftime("%m-%d-%y")
     model_path = output_path / "model"
-    model_path.mkdir()
-    gallery_path = output_path / "gallery"
-    gallery_path.mkdir()
+    model_path.mkdir(parents=True)
 
     # Load data
     data = ImageDataBunch.from_folder(data_path, ds_tfms=get_transforms(), size=224).normalize(
         imagenet_stats
     )
 
+    print("Creating model...")
     # Create model
-    learn = cnn_learner(
-        data,
-        models.resnet50,
-        metrics=[accuracy, top_k_accuracy],
-        callback_fns=[
-            partial(EarlyStoppingCallback, monitor="accuracy", min_delta=0.005, patience=5)
-        ],
-        path=model_path,
-    )
+    learn = cnn_learner(data, models.resnet50, metrics=[accuracy, top_k_accuracy], path=model_path)
 
+    print("Strating training phase 1...")
     # Fit last layer
     learn.fit_one_cycle(
         10, callbacks=[SaveModelCallback(learn, monitor="accuracy", name="best_model_stg_1")]
     )
     learn.load("best_model_stg_1")
 
+    print("Strating training phase 2...")
     # Unfreeze model and fit all layers
     learn.unfreeze()
     learn.fit_one_cycle(
@@ -63,26 +53,29 @@ def train(data_path, output_path, create_gallery=True, force_cpu=False):
     learn.export("model.pkl")
 
     if create_gallery:
+        print("Creating gallery...")
         # Create gallery (embeddings, image ids and labels)
-        fixed_dl = learn.train_dl.new(shuffle=False, drop_last=False)
+        gallery_path = output_path / "gallery"
+        gallery_path.mkdir()
+        fixed_dl = learn.data.train_dl.new(shuffle=False, drop_last=False)
 
         embeddings = get_embeddings(learn, fixed_dl, pool=None)
         image_ids = get_image_ids(data_path)
 
         torch.save(embeddings, gallery_path / "embeddings.pt")
-        torch.save(learn.train_ds.y.items, gallery_path / "labels.pt")
+        torch.save(learn.data.train_ds.y.items, gallery_path / "labels.pt")
         torch.save(image_ids, gallery_path / "image_ids.pt")
+    print("Finished!")
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="LINC Face Prediction")
+    parser = argparse.ArgumentParser(description="LINC face training")
     parser.add_argument("data_path", help="Path to the folder containing the labeled images")
     parser.add_argument(
         "output_path", help="Path to the folder where the models and gallery will be saved"
     )
-    parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
     parser.add_argument(
         "--no_gallery",
         default=False,
@@ -92,6 +85,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    results = train(args.data_path, args.output_path, not args.no_gallery, args.cpu)
-
-    print(results)
+    tic = time.time()
+    train(args.data_path, args.output_path, not args.no_gallery)
+    toc = time.time()
+    print(f"Done in {toc - tic:.2f} seconds!")
