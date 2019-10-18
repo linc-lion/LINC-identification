@@ -25,7 +25,7 @@ def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
     # Load the database
     print("Loading gallery...")
     disk_embeddings = torch.load(gallery_path / "embeddings.pt")
-    disk_image_ids = torch.load(gallery_path / "image_ids.pt")
+    disk_image_ids = torch.load(gallery_path / "face_image_ids.pt")
     disk_labels = torch.load(gallery_path / "labels.pt")
 
     # Load incoming images
@@ -49,7 +49,7 @@ def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
     new_labels = np.concatenate((disk_labels, incoming_labels))
 
     torch.save(new_embeddings, output_path / "embeddings.pt")
-    torch.save(new_image_ids, output_path / "image_ids.pt")
+    torch.save(new_image_ids, output_path / "face_image_ids.pt")
     torch.save(new_labels, output_path / "labels.pt")
 
     print(f"Lions ${incoming_data.train_ds.y.classes} successfully added/updated!")
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("model_path", help="Path to the pickle of the model")
     parser.add_argument(
         "gallery_path",
-        help="Path to the folder containing the gallery: embeddings.pt, image_ids.pt and labels.pt",
+        help="Path to the gallery. Contains: embeddings.pt, face_image_ids.pt and labels.pt",
     )
     args = parser.parse_args()
 

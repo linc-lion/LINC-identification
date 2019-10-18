@@ -64,7 +64,7 @@ def train(data_path, output_path, create_gallery=True):
 
         torch.save(embeddings, gallery_path / "embeddings.pt")
         torch.save(learn.data.train_ds.y.items, gallery_path / "labels.pt")
-        torch.save(image_ids, gallery_path / "image_ids.pt")
+        torch.save(image_ids, gallery_path / "face_image_ids.pt")
     print("Finished!")
 
 

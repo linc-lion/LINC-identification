@@ -107,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("n", default=3, help="How many lions to retrive per image")
     parser.add_argument(
         "gallery_path",
-        help="Path to the gallery folder, contains: right_data.pt, left_data.pt and image_ids.pt",
+        help="Path to the gallery, contains: right_data.pt, left_data.pt and whisker_image_ids.pt",
     )
     parser.add_argument(
         "whisker_spot_model_path",

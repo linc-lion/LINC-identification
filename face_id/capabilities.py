@@ -5,7 +5,7 @@ import torch
 
 def capabilities(gallery_path):
     gallery_path = Path(gallery_path)
-    return torch.load(gallery_path / "image_ids.pt")
+    return torch.load(gallery_path / "face_image_ids.pt")
 
 
 if __name__ == "__main__":
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LINC capabilities")
     parser.add_argument(
         "gallery_path",
-        help="Path to the folder containing the gallery: embeddings.pt, image_ids.pt and labels.pt",
+        help="Path to the gallery. Contains: embeddings.pt, face_image_ids.pt and labels.pt",
     )
     args = parser.parse_args()
     print(capabilities(args.gallery_path))

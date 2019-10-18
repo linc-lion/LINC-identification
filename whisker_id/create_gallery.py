@@ -55,7 +55,7 @@ def create_gallery(
     )
 
     if current_gallery_path:
-        image_ids = torch.load(current_gallery_path / "image_ids.pt")
+        image_ids = torch.load(current_gallery_path / "whisker_image_ids.pt")
         image_ids = get_image_ids(data_path, image_ids)
         (current_right_whiskers, current_right_labels) = torch.load(
             current_gallery_path / "right_data.pt"
@@ -72,7 +72,7 @@ def create_gallery(
     else:
         image_ids = get_image_ids(data_path)
 
-    torch.save(image_ids, gallery_path / "image_ids.pt")
+    torch.save(image_ids, gallery_path / "whisker_image_ids.pt")
     torch.save((left_whiskers, left_labels), gallery_path / "left_data.pt")
     torch.save((right_whiskers, right_labels), gallery_path / "right_data.pt")
 
