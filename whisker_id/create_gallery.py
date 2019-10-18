@@ -1,36 +1,19 @@
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import torch
 from PIL import Image
 from tqdm import tqdm
 
-from linc_detection.models import detection
-from utils import get_image_ids, whisker_detector_predict
+from utils import get_image_ids, load_model, whisker_detector_predict
 
 
-def create_gallery(data_path, output_path, whisker_spot_model_path, force_cpu=False):
-    data_path = Path(data_path)
-    output_path = Path(output_path)
+@torch.no_grad()
+def process_gallery(data_path, force_cpu, whisker_spot_model_path):
 
-    device = "cuda" if torch.has_cuda and not force_cpu else "cpu"
-    print(f"Running inference on {device} device")
-
-    print("Loading checkpoint from hardrive... ", end="", flush=True)
-    checkpoint = torch.load(whisker_spot_model_path, map_location=device)
-    label_names = checkpoint["label_names"]
-    print("Done.")
-
-    print("Building model and loading checkpoint into it... ", end="", flush=True)
-    model = detection.fasterrcnn_resnet50_fpn(
-        num_classes=len(label_names) + 1, pretrained_backbone=False
-    )
-    model.to(device)
-
-    model.load_state_dict(checkpoint["model"])
-    model.eval()
+    model = load_model(whisker_spot_model_path, force_cpu)
 
     right_whiskers = []
     right_labels = []
@@ -46,9 +29,9 @@ def create_gallery(data_path, output_path, whisker_spot_model_path, force_cpu=Fa
                 continue
             for image in whisker_folder.iterdir():
                 predictions = whisker_detector_predict(
-                    Image.open(image).convert("RGB"), model, device
+                    Image.open(image).convert("RGB"), model, force_cpu
                 )
-                if predictions is not None:
+                if predictions is not None and predictions.shape[0] > 1:
                     if "left" in whisker_folder.name:
                         left_whiskers.append(predictions)
                         left_labels.append(int(lion.name))
@@ -56,13 +39,42 @@ def create_gallery(data_path, output_path, whisker_spot_model_path, force_cpu=Fa
                         right_whiskers.append(predictions)
                         right_labels.append(int(lion.name))
 
-    gallery_path = output_path / "gallery"
-    gallery_path.mkdir()
-    torch.save(get_image_ids(data_path), gallery_path / "image_ids.pt")
-    torch.save((np.array(left_whiskers), np.array(left_labels)), gallery_path / "left_data.pt")
-    torch.save((np.array(right_whiskers), np.array(right_labels)), gallery_path / "right_data.pt")
+    return right_whiskers, right_labels, left_whiskers, left_labels
 
-    print("Done.")
+
+def create_gallery(
+    data_path, output_path, whisker_spot_model_path, current_gallery_path=None, force_cpu=False
+):
+    data_path = Path(data_path)
+    output_path = Path(output_path)
+    gallery_path = output_path / "gallery-{}".format(datetime.today().strftime("%m-%d-%y"))
+    gallery_path.mkdir()
+
+    right_whiskers, right_labels, left_whiskers, left_labels = process_gallery(
+        data_path, force_cpu, whisker_spot_model_path
+    )
+
+    if current_gallery_path:
+        image_ids = torch.load(current_gallery_path / "image_ids.pt")
+        image_ids = get_image_ids(data_path, image_ids)
+        (current_right_whiskers, current_right_labels) = torch.load(
+            current_gallery_path / "right_data.pt"
+        )
+        (current_left_whiskers, current_left_labels) = torch.load(
+            current_gallery_path / "left_data.pt"
+        )
+
+        right_whiskers.append(current_right_whiskers)
+        right_labels.append(current_right_labels)
+
+        left_whiskers.append(current_left_whiskers)
+        left_labels.append(current_left_labels)
+    else:
+        image_ids = get_image_ids(data_path)
+
+    torch.save(image_ids, gallery_path / "image_ids.pt")
+    torch.save((left_whiskers, left_labels), gallery_path / "left_data.pt")
+    torch.save((right_whiskers, right_labels), gallery_path / "right_data.pt")
 
 
 if __name__ == "__main__":
@@ -74,6 +86,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "whisker_spot_model_path",
         help="Path to the folder where the models and gallery will be saved",
+    )
+    parser.add_argument(
+        "--current_gallery_path",
+        default=None,
+        help="The gallery to be updated by adding the lions provided on the data path",
     )
     parser.add_argument("--cpu", dest="cpu", help="Force model to use CPU", action="store_true")
     args = parser.parse_args()
