@@ -4,26 +4,16 @@ from pathlib import Path
 import numpy as np
 import torch
 from fastai.vision import ImageList, imagenet_stats, load_learner
-from scipy.special import softmax
 from sklearn.neighbors import KNeighborsClassifier
 
-from utils import get_embeddings
+from utils import get_embeddings, get_k_neighbors
 
 
 def get_neighbors(nearest_neighbors, nearest_distances, n):
     k_neighbors = []
     for neighbors, distances in zip(nearest_neighbors, nearest_distances):
-        lion_neighbors = []
-        neighbor_dists = []
-        for neighbor, distance in zip(neighbors, distances):
-            if neighbor not in lion_neighbors:
-                lion_neighbors.append(neighbor)
-                neighbor_dists.append(1 / distance)
-            if len(lion_neighbors) >= n:
-                break
-        neighbor_dists = softmax(neighbor_dists)
-        neighbors_map = dict(zip(lion_neighbors, neighbor_dists))
-        k_neighbors.append(neighbors_map)
+
+        k_neighbors.append(get_k_neighbors(neighbors, distances, n))
     return k_neighbors
 
 
@@ -93,7 +83,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lion_subset",
         default=None,
-        help="Comma separated list of the lion ids to be matched agianst. Searches over all database by default.",
+        help="Comma separated list of the lion ids to be matched agianst. Default: All lions",
     )
 
     args = parser.parse_args()
