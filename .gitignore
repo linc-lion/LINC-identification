@@ -3,3 +3,4 @@ model/
 .vscode/
 linc_detection/
 *.pyc
+linc_identification.egg-info

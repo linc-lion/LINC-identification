@@ -9,15 +9,14 @@ from sklearn.neighbors import KNeighborsClassifier
 from utils import get_embeddings, get_k_neighbors
 
 
-def get_neighbors(nearest_neighbors, nearest_distances, n):
-    k_neighbors = []
-    for neighbors, distances in zip(nearest_neighbors, nearest_distances):
-
-        k_neighbors.append(get_k_neighbors(neighbors, distances, n))
+def get_neighbors(nearest_neighbors, nearest_distances, ids, n):
+    k_neighbors = {}
+    for probe_id, neighbors, distances in zip(ids, nearest_neighbors, nearest_distances):
+        k_neighbors[probe_id] = get_k_neighbors(neighbors, distances, n)
     return k_neighbors
 
 
-def get_top_n(emb_gal, label_gal, emb_probes, lion_subset, n):
+def get_top_n(emb_gal, label_gal, emb_probes, probe_ids, lion_subset, n):
 
     emb_subset = emb_gal[np.isin(label_gal, lion_subset)]
     label_subset = label_gal[np.isin(label_gal, lion_subset)]
@@ -27,7 +26,7 @@ def get_top_n(emb_gal, label_gal, emb_probes, lion_subset, n):
 
     nearest_neighbors = knn_classifier.kneighbors(emb_probes, n_neighbors=20, return_distance=True)
 
-    topN = get_neighbors(label_subset[nearest_neighbors[1]], nearest_neighbors[0], n)
+    topN = get_neighbors(label_subset[nearest_neighbors[1]], nearest_neighbors[0], probe_ids, n)
 
     return topN
 
@@ -53,7 +52,7 @@ def predict(query_image_set_path, n, model_path, gallery_path, lion_subset=None)
     incoming_data = (
         ImageList.from_folder(images_path)
         .split_none()
-        .label_empty()
+        .label_from_re(r"image_(\d*)")
         .transform(None, size=224)
         .databunch(bs=1)
         .normalize(imagenet_stats)
@@ -64,7 +63,14 @@ def predict(query_image_set_path, n, model_path, gallery_path, lion_subset=None)
     incoming_embeddings = get_embeddings(learn, fixed_dl, pool=None)
 
     # Get predictions
-    return get_top_n(disk_embeddings, disk_labels, incoming_embeddings, lion_subset, n)
+    return get_top_n(
+        disk_embeddings,
+        disk_labels,
+        incoming_embeddings,
+        incoming_data.train_ds.y.classes[incoming_data.train_ds.y.items],
+        lion_subset,
+        n,
+    )
 
 
 if __name__ == "__main__":

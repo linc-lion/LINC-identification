@@ -56,7 +56,7 @@ def train(data_path, output_path, create_gallery=True):
         print("Creating gallery...")
         # Create gallery (embeddings, image ids and labels)
         gallery_path = output_path / "gallery"
-        gallery_path.mkdir()
+        gallery_path.mkdir(exist_ok=True)
         fixed_dl = learn.data.train_dl.new(shuffle=False, drop_last=False)
 
         embeddings = get_embeddings(learn, fixed_dl, pool=None)

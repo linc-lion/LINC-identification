@@ -18,7 +18,7 @@ def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
     images_path = Path(new_lions_path)
 
     output_path = Path(output_path) / "gallery-{}".format(datetime.today().strftime("%m-%d-%y"))
-    output_path.mkdir()
+    output_path.mkdir(exist_ok=True)
 
     gallery_path = Path(gallery_path)
 
