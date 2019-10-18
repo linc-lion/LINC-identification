@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +17,9 @@ def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
 
     images_path = Path(new_lions_path)
 
-    output_path = Path(output_path)
+    output_path = Path(output_path) / "gallery-{}".format(datetime.today().strftime("%m-%d-%y"))
+    output_path.mkdir()
+
     gallery_path = Path(gallery_path)
 
     # Load the database
@@ -44,8 +47,6 @@ def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
     new_embeddings = torch.cat((disk_embeddings, incoming_embeddings))
     new_image_ids = get_image_ids(images_path, disk_image_ids)
     new_labels = np.concatenate((disk_labels, incoming_labels))
-
-    output_path.mkdir(exist_ok=True)
 
     torch.save(new_embeddings, output_path / "embeddings.pt")
     torch.save(new_image_ids, output_path / "image_ids.pt")

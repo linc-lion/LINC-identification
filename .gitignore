@@ -1,6 +1,5 @@
 data/
 model/
 .vscode/
-datasets/linc_detection/
-whisker_id/linc_detection/
+linc_detection/
 *.pyc

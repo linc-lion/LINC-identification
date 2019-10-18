@@ -7,8 +7,8 @@ import torchvision
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
+from dataset_utils import preprocess_image
 from linc_detection.models import detection
-from utils import preprocess_image
 
 convert_to_pil = torchvision.transforms.ToPILImage()
 
