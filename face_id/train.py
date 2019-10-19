@@ -17,13 +17,12 @@ from fastai.vision import (
 from utils import get_embeddings, get_image_ids
 
 
-def train(data_path, output_path, create_gallery=True):
+def train(data_path, model_output_path, gallery_output_path=None):
 
     print("Loading data...")
     data_path = Path(data_path)
-    output_path = Path(output_path) / datetime.today().strftime("%m-%d-%y")
-    model_path = output_path / "model"
-    model_path.mkdir(parents=True)
+    model_output_path = Path(model_output_path) / datetime.today().strftime("%m-%d-%y")
+    model_output_path.mkdir(parents=True)
 
     # Load data
     data = ImageDataBunch.from_folder(data_path, ds_tfms=get_transforms(), size=224).normalize(
@@ -32,7 +31,9 @@ def train(data_path, output_path, create_gallery=True):
 
     print("Creating model...")
     # Create model
-    learn = cnn_learner(data, models.resnet50, metrics=[accuracy, top_k_accuracy], path=model_path)
+    learn = cnn_learner(
+        data, models.resnet50, metrics=[accuracy, top_k_accuracy], path=model_output_path
+    )
 
     print("Strating training phase 1...")
     # Fit last layer
@@ -52,10 +53,10 @@ def train(data_path, output_path, create_gallery=True):
     # Save inference model
     learn.export("model.pkl")
 
-    if create_gallery:
+    if gallery_output_path:
         print("Creating gallery...")
         # Create gallery (embeddings, image ids and labels)
-        gallery_path = output_path / "gallery"
+        gallery_path = Path(gallery_output_path) / datetime.today().strftime("%m-%d-%y")
         gallery_path.mkdir(exist_ok=True)
         fixed_dl = learn.data.train_dl.new(shuffle=False, drop_last=False)
 
@@ -74,18 +75,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LINC face training")
     parser.add_argument("data_path", help="Path to the folder containing the labeled images")
     parser.add_argument(
-        "output_path", help="Path to the folder where the models and gallery will be saved"
+        "model_output_path", help="Path to the folder where the models will be saved"
     )
     parser.add_argument(
-        "--no_gallery",
-        default=False,
-        dest="no_gallery",
-        help="Stop the creation of a new gallery",
-        action="store_true",
+        "--gallery_output_path",
+        default=None,
+        help="If provided a new gallery will be created on the given path.",
     )
     args = parser.parse_args()
 
     tic = time.time()
-    train(args.data_path, args.output_path, not args.no_gallery)
+    train(args.data_path, args.model_output_path, args.gallery_output_path)
     toc = time.time()
     print(f"Done in {toc - tic:.2f} seconds!")

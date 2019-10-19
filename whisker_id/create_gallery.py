@@ -47,7 +47,7 @@ def create_gallery(
 ):
     data_path = Path(data_path)
     output_path = Path(output_path)
-    gallery_path = output_path / "gallery-{}".format(datetime.today().strftime("%m-%d-%y"))
+    gallery_path = output_path / datetime.today().strftime("%m-%d-%y")
     gallery_path.mkdir(exist_ok=True)
 
     right_whiskers, right_labels, left_whiskers, left_labels = process_gallery(
