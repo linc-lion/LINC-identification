@@ -9,9 +9,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from utils import get_embeddings, get_k_neighbors
 
 
-def get_neighbors(nearest_neighbors, nearest_distances, ids, n):
+def get_neighbors(nearest_neighbors, nearest_distances, probe_ids, n):
     k_neighbors = {}
-    for probe_id, neighbors, distances in zip(ids, nearest_neighbors, nearest_distances):
+    for probe_id, neighbors, distances in zip(probe_ids, nearest_neighbors, nearest_distances):
         k_neighbors[probe_id] = get_k_neighbors(neighbors, distances, n)
     return k_neighbors
 
@@ -62,12 +62,14 @@ def predict(query_image_set_path, n, model_path, gallery_path, lion_subset=None)
     fixed_dl = incoming_data.train_dl.new(shuffle=False, drop_last=False)
     incoming_embeddings = get_embeddings(learn, fixed_dl, pool=None)
 
+    incoming_ids = np.array([int(image_id) for image_id in incoming_data.train_ds.y.classes])
+
     # Get predictions
     return get_top_n(
         disk_embeddings,
         disk_labels,
         incoming_embeddings,
-        incoming_data.train_ds.y.classes[incoming_data.train_ds.y.items],
+        incoming_ids[incoming_data.train_ds.y.items],
         lion_subset,
         n,
     )

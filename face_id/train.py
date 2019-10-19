@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import torch
 from fastai.callbacks import SaveModelCallback
 from fastai.vision import (
@@ -22,7 +23,7 @@ def train(data_path, model_output_path, gallery_output_path=None):
     print("Loading data...")
     data_path = Path(data_path)
     model_output_path = Path(model_output_path) / datetime.today().strftime("%m-%d-%y")
-    model_output_path.mkdir(parents=True)
+    model_output_path.mkdir(parents=True, exist_ok=True)
 
     # Load data
     data = ImageDataBunch.from_folder(data_path, ds_tfms=get_transforms(), size=224).normalize(
@@ -61,10 +62,13 @@ def train(data_path, model_output_path, gallery_output_path=None):
         fixed_dl = learn.data.train_dl.new(shuffle=False, drop_last=False)
 
         embeddings = get_embeddings(learn, fixed_dl, pool=None)
-        image_ids = get_image_ids(data_path)
+        image_ids = get_image_ids(data_path / "train")
+
+        labels = np.array(learn.data.train_ds.y.classes)[learn.data.train_ds.y.items]
+        labels = [int(label) for label in labels]
 
         torch.save(embeddings, gallery_path / "embeddings.pt")
-        torch.save(learn.data.train_ds.y.items, gallery_path / "labels.pt")
+        torch.save(labels, gallery_path / "labels.pt")
         torch.save(image_ids, gallery_path / "face_image_ids.pt")
     print("Finished!")
 
