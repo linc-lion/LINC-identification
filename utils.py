@@ -19,7 +19,8 @@ def get_k_neighbors(neighbors, distances, n):
     for neighbor, distance in zip(neighbors, distances):
         if neighbor not in lion_neighbors:
             lion_neighbors.append(neighbor)
-            neighbor_dists.append(1 / distance)
+            neighbor_dists.append((1 / distance) if distance > 0 else 0)
+
         if len(lion_neighbors) >= n:
             break
     neighbor_dists = softmax(neighbor_dists)
@@ -47,9 +48,8 @@ def get_image_ids(input_path, image_ids=defaultdict(list)):
         except ValueError:
             raise Exception("Invalid folder structure, could not parse image id from image name.")
 
-        lion_images = image_ids[lion_id]
-        if image_id not in lion_images:
-            lion_images.append(image_id)
+        if image_id not in image_ids[lion_id]:
+            image_ids[lion_id].append(image_id)
     return image_ids
 
 
