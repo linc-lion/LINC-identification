@@ -3,7 +3,18 @@ import shutil
 from pathlib import Path
 
 
-def main(input_path, min_images, train_size):
+def train_val_split(input_path, min_images, train_size):
+    """Splits a dataset into train, validation and not used.
+    Parameters
+    ----------
+    input_path : str
+        Path to the original dataset
+    min_images : int
+        Minimum amount of images required for a lion to be included on the dataset.
+    train_size : float
+        Proportion of the dataset to include in the train split (between 0 and 1).
+    """
+
     input_path = Path(input_path)
 
     train_root = input_path.joinpath("train")
@@ -53,4 +64,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.input_path, int(args.min_images), float(args.train_size))
+    train_val_split(args.input_path, int(args.min_images), float(args.train_size))

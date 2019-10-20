@@ -19,6 +19,19 @@ from utils import get_embeddings, get_image_ids
 
 
 def train(data_path, model_output_path, gallery_output_path=None):
+    """Trains a ResNet 50 model using the images on data_path. Output model is
+    saved on model_output_path. If gallery_output_path is provided, a new gallery
+    with the lions will be created there.
+    Parameters
+    ----------
+    data_path : str
+        Path to the folder containing the labeled images. They should be
+        separated into train and valid.
+    model_output_path : str
+        Path to the folder where the models will be saved.
+    gallery_output_path : str, optional, default: None
+        If provided a new gallery will be created on the given path
+    """
 
     print("Loading data...")
     data_path = Path(data_path)

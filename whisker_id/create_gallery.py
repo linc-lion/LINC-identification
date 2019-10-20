@@ -12,6 +12,9 @@ from utils import get_image_ids, load_model, whisker_detector_predict
 
 @torch.no_grad()
 def process_gallery(data_path, force_cpu, whisker_spot_model_path):
+    """Given a data path it returns all the whisker centers and labels,
+    separated by side.
+    """
 
     model = load_model(whisker_spot_model_path, force_cpu)
 
@@ -45,6 +48,21 @@ def process_gallery(data_path, force_cpu, whisker_spot_model_path):
 def create_gallery(
     data_path, output_path, whisker_spot_model_path, current_gallery_path=None, force_cpu=False
 ):
+    """Creates a new whisker gallery using the data store on data_path and saves it on output_path.
+    Also used to add new lions to the current gallery (use current_gallery_path).
+    Parameters
+    ----------
+    data_path : str
+        Path to the folder containing the labeled images (by lion and side).
+    output_path : str
+        Path to the folder where gallery will be saved
+    whisker_spot_model_path : str
+        Path to the whisker detection model checkpoint (.pth)
+    current_gallery_path : str, optional, default: None
+        If provided, all data on the current gallery is added to the new gallery
+    force_cpu : bool, optional, default: False
+        Force the model to run on CPU.
+    """
     data_path = Path(data_path)
     output_path = Path(output_path)
     gallery_path = output_path / datetime.today().strftime("%m-%d-%y")
@@ -81,11 +99,12 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="LINC whisker gallery creation")
-    parser.add_argument("data_path", help="Path to the folder containing the labeled images")
+    parser.add_argument(
+        "data_path", help="Path to the folder containing the labeled images (by lion and side)."
+    )
     parser.add_argument("output_path", help="Path to the folder where gallery will be saved")
     parser.add_argument(
-        "whisker_spot_model_path",
-        help="Path to the folder where the models and gallery will be saved",
+        "whisker_spot_model_path", help="Path to the whisker detection model checkpoint (.pth)"
     )
     parser.add_argument(
         "--current_gallery_path",

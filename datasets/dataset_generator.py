@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -24,6 +25,29 @@ filters = {
 def dataset_generator(
     input_path, output_path, cv_model_path, force_cpu=False, transform=2, filter_type=1
 ):
+    """Creates a copy of a dataset, applies filters and transformations for each image.
+    For info on the dataset folder structure look at README.
+    Parameters
+    ----------
+    input_path : str
+        Path to the original dataset
+    output_path : str
+        Path to the location where the copy will be created
+    cv_model_path : str
+        Path to the body parts model checkpoint (.pth)
+    force_cpu : bool, optional
+        Force to use CPU
+    transform : {0, 1, 2}, optional, default: 2
+        Select which transformations to apply:
+             0-None
+             1-Align eyes
+             2-Align eyes + zoom
+    filter_type : {0, 1, 2}, optional, default: 1
+        Select which filter to apply:
+            0-only frontal images
+            1-frontal & diagonal images
+            2-all images
+    """
 
     filter_labels = filters[filter_type]
 
@@ -97,7 +121,7 @@ if __name__ == "__main__":
         help="Select which filter to apply: 0-only frontal, 1-frontal & diagonal, 2-all images",
     )
     args = parser.parse_args()
-
+    tic = time.time()
     dataset_generator(
         args.input_path,
         args.output_path,
@@ -106,3 +130,5 @@ if __name__ == "__main__":
         int(args.transform),
         int(args.filter),
     )
+    toc = time.time()
+    print(f"Done in {toc - tic:.2f} seconds!")

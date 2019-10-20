@@ -9,6 +9,18 @@ from utils import get_embeddings, get_image_ids
 
 
 def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
+    """Creates a new gallery including all incoming and current lions.
+    Parameters
+    ----------
+    new_lions_path : str
+        Path to the folder containing the labeled images
+    output_path : str
+        Path to the destination where the new gallery is going to be created
+    model_path : str
+        Path to the pkl file from the identification model.
+    gallery_path : str
+        Path to the gallery. Contains: embeddings.pt, face_image_ids.pt and labels.pt
+    """
 
     # Load the model
     print("Loading model...")

@@ -63,6 +63,32 @@ def predict(
     lion_subset=None,
     force_cpu=False,
 ):
+    """Get the top N matchings for a new set of images.
+    Parameters
+    ----------
+    query_image_set_path : str
+        Path to the folder containing the labeled images
+    gallery_path : str
+        Path to the folder containing the gallery: embeddings.pt, image_ids.pt and labels.pt
+    whisker_spot_model_path : str
+        Path to the whisker detection model checkpoint (.pth)
+    n : int
+        How many lions to retrive per image.
+    side : {"left", "right"}
+        Which database to match against.
+    algorithm : {"sinkhorn", "cpd"}, optional, default: "sinkhorn"
+    lion_subset : list of ints, optional, default: None
+        List of the lion ids to be matched agianst. If None, matches against all lions.
+    force_cpu : bool, optional, default: False
+        Force the model to run on CPU.
+    Returns
+    ----------
+    dict
+        Key: Image ID
+        Value: dict
+            Key: Lion ID
+            Value: Confidence
+    """
     assert algorithm == "sinkhorn" or algorithm == "cpd"
     assert side == "left" or side == "right"
 
@@ -115,8 +141,7 @@ if __name__ == "__main__":
         help="Path to the gallery, contains: right_data.pt, left_data.pt and whisker_image_ids.pt",
     )
     parser.add_argument(
-        "whisker_spot_model_path",
-        help="Path to the folder where the models and gallery will be saved",
+        "whisker_spot_model_path", help="Path to the whisker detection model checkpoint (.pth)"
     )
     parser.add_argument("side", help="Which side do the whisker images belong to (right or left).")
     parser.add_argument(

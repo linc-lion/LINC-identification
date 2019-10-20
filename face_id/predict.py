@@ -10,6 +10,9 @@ from utils import get_embeddings, get_k_neighbors
 
 
 def get_neighbors(nearest_neighbors, nearest_distances, probe_ids, n):
+    """Takes a list of neighbors, their distances and returns N unique matchings
+    (It prevents returning the same lion multiple times inside the top N).
+    """
     k_neighbors = {}
     for probe_id, neighbors, distances in zip(probe_ids, nearest_neighbors, nearest_distances):
         k_neighbors[probe_id] = get_k_neighbors(neighbors, distances, n)
@@ -17,6 +20,9 @@ def get_neighbors(nearest_neighbors, nearest_distances, probe_ids, n):
 
 
 def get_top_n(emb_gal, label_gal, emb_probes, probe_ids, lion_subset, n):
+    """For every embedding on emb_probes returns the top N matching with the
+    embeddings on emb_gal that belong to the lion subset.
+    """
 
     emb_subset = emb_gal[np.isin(label_gal, lion_subset)]
     label_subset = label_gal[np.isin(label_gal, lion_subset)]
@@ -32,6 +38,27 @@ def get_top_n(emb_gal, label_gal, emb_probes, probe_ids, lion_subset, n):
 
 
 def predict(query_image_set_path, n, model_path, gallery_path, lion_subset=None):
+    """Get the top N matchings for a new set of images.
+    Parameters
+    ----------
+    query_image_set_path : str
+        Path to the folder containing the labeled images
+    n : int
+        How many lions to retrive per image.
+    model_path : str
+        Path to the pickle of the model.
+    gallery_path : str
+        Path to the folder containing the gallery: embeddings.pt, image_ids.pt and labels.pt
+    lion_subset : list of ints, optional, default: None
+        List of the lion ids to be matched agianst. If None, matches against all lions.
+    Returns
+    ----------
+    dict
+        Key: Image ID
+        Value: dict
+            Key: Lion ID
+            Value: Confidence
+    """
 
     # Load the model
     model_path = Path(model_path)
@@ -82,7 +109,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "query_image_set_path", help="Path to the folder containing the labeled images"
     )
-    parser.add_argument("n", default=3, help="How many lions to retrive per image.")
+    parser.add_argument("n", help="How many lions to retrive per image.")
     parser.add_argument("model_path", help="Path to the pickle of the model")
     parser.add_argument(
         "gallery_path",
