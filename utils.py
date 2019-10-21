@@ -1,5 +1,5 @@
 import re
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 
 import numpy as np
 import torch
@@ -14,17 +14,22 @@ to_tensor = transforms.ToTensor()
 
 
 def get_k_neighbors(neighbors, distances, n):
-    lion_neighbors = []
-    neighbor_dists = []
+    lion_neighbors = OrderedDict()
     for neighbor, distance in zip(neighbors, distances):
         if neighbor not in lion_neighbors:
-            lion_neighbors.append(neighbor)
-            neighbor_dists.append((1 / distance) if distance > 0 else 0)
-
+            lion_neighbors[neighbor] = ((distance), 1) if distance > 0 else (0, 1)
+        else:
+            lion_neighbors[neighbor] = (
+                lion_neighbors[neighbor][0],
+                lion_neighbors[neighbor][1] + 1,
+            )
         if len(lion_neighbors) >= n:
             break
-    neighbor_dists = softmax(neighbor_dists)
-    return dict(zip(lion_neighbors, neighbor_dists))
+    weighted_dists = [
+        (1 / min_dist) * appearances for min_dist, appearances in lion_neighbors.values()
+    ]
+    weighted_dists = softmax(weighted_dists)
+    return dict(zip(lion_neighbors.keys(), weighted_dists))
 
 
 def get_embeddings(learn, fix_dl, **kwargs):
@@ -45,7 +50,7 @@ def get_image_ids(input_path, image_ids=defaultdict(list)):
 
         try:
             image_id = int(re.search(r"image_(\d*)", image_path.name).group(1))
-        except ValueError:
+        except AttributeError:
             raise Exception("Invalid folder structure, could not parse image id from image name.")
 
         if image_id not in image_ids[lion_id]:
