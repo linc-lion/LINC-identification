@@ -77,7 +77,7 @@ Run `python train.py --help` for usage info. or look at code docstrings
 
 #### Predict
 
-The inference script needs the [model pickle](https://github.com/tryolabs/LINC/releases/download/v1.0/whiskers.pth) and the [gallery](https://github.com/tryolabs/LINC/releases/download/v1.0/body_parts.pth), these are created by the training script or can be found on the [releases](https://github.com/tryolabs/LINC/releases) page of the repo.
+The inference script needs the model pickle and the gallery, these are created by the training script or can be found on the [releases](https://github.com/tryolabs/LINC-identification/releases) page of the repo.
 
 To train the released model, the defaults from the dataset generator and split were used (zoomed images, filter side faces, and a minimum of three images per lion).
 
