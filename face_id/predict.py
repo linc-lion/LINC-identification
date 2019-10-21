@@ -30,7 +30,7 @@ def get_top_n(emb_gal, label_gal, emb_probes, probe_ids, lion_subset, n):
     knn_classifier = KNeighborsClassifier(n_neighbors=5, n_jobs=-1)
     knn_classifier.fit(emb_subset, label_subset)
 
-    nearest_neighbors = knn_classifier.kneighbors(emb_probes, n_neighbors=20, return_distance=True)
+    nearest_neighbors = knn_classifier.kneighbors(emb_probes, n_neighbors=100, return_distance=True)
 
     topN = get_neighbors(label_subset[nearest_neighbors[1]], nearest_neighbors[0], probe_ids, n)
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     tic = time.time()
     results = predict(
-        args.query_image_set_path, float(args.n), args.model_path, args.gallery_path, lion_subset
+        args.query_image_set_path, int(args.n), args.model_path, args.gallery_path, lion_subset
     )
     toc = time.time()
     print(results, f"Done in {toc - tic:.2f} seconds!")
