@@ -34,21 +34,13 @@ For training and adding new lions, the dataset folder structure should be the fo
 
 ```
 input/
-
 	1/
-
 		image_1.jpg
-
 		image_2.jpg
-
 		...
-
 	2/
-
 		image_32.jpg
-
 		...
-
 	...
 ```
 
@@ -60,13 +52,13 @@ For prediction, the images can be inside a single folder, but the image ID still
 
 This script creates a copy of a local dataset, algins, and filters the images.
 
-Run `python dataset_generator.py --help` for usage info.
+Run `python dataset_generator.py --help` for usage info or look at code docstrings.
 
 #### Dataset splitter
 
 This script splits the dataset into train and validation. Also, filter lions that are beyond the minimum amount of images threshold. The operation is __inplace__.
 
-Run `python train_val_split.py --help` for usage info.
+Run `python train_val_split.py --help` for usage info or look at code docstrings.
 
 ### Gallery
 
@@ -81,7 +73,7 @@ The datasets folder structure used for training must be the one specified on the
 The training script not only builds the identification model but also, if `gallery_output_path` is specified, creates the initial gallery needed. 
 
 To force the model to run on CPU, set `CUDA_VISIBLE_DEVICES` to an empty string.
-Run `python train.py --help` for usage info.
+Run `python train.py --help` for usage info. or look at code docstrings
 
 #### Predict
 
@@ -92,14 +84,14 @@ To train the released model, the defaults from the dataset generator and split w
 The method returns a dictionary with image ids as keys and as value the top N prediction for that image. The top N predictions are represented with a dictionary with lion ids as keys and confidence as value.
 
 To force the model to run on CPU, set `CUDA_VISIBLE_DEVICES` to an empty string.
-Run `python predict.py --help` for usage info.
+Run `python predict.py --help` for usage info. or look at code docstrings
 
 #### Adding new lions
 
 Given a folder with the structure specified before, `add_new_lions.py` creates a new gallery that includes all the lions on the input folder. Also, if some lions were already in the current gallery, all the incoming image ids are added to their list.
 
 To force the model to run on CPU, set `CUDA_VISIBLE_DEVICES` to an empty string.
-Run `python add_new_lions.py --help` for usage info.
+Run `python add_new_lions.py --help` for usage info. or look at code docstrings
 
 ### Whisker Identification
 #### Create gallery
@@ -109,23 +101,16 @@ The `create_gallery` script, handles both the initial gallery creation and the a
 The folder structure must be the following:
 ```
 input/
-
 	1/
 		left/
-
 			image_1.jpg
 			...
 		right/
-
 			image_2.jpg
-
 			...
-
 	2/
 		left/
-
 			image_32.jpg
-
 			...
 		right/
 			...
@@ -136,19 +121,19 @@ The folders within each lion must contain `left` or `right` on their name to be 
 
 To update the current gallery the argument `current_gallery_path` must be provided.
 
-Run `python create_gallery.py --help` for usage info.
+Run `python create_gallery.py --help` for usage info or look at code docstrings.
 
 #### Predict
 The `predict` script takes either left or right (not both) whisker images and matches them with the corresponding database.
 
-Run `python predict.py --help` for usage info.
+Run `python predict.py --help` for usage info or look at code docstrings.
 
 ### Capabilities
 
 Given the gallery path and algorithm, it returns a dictionary that contains lion ids as keys and image ids as values.
 
-Run `python capabilities.py --help` for usage info.
+Run `python capabilities.py --help` for usage info or look at code docstrings.
 
 ### Notebooks
 
-There are a few jupyter notebooks in the `notebooks/` directory, which show some of the original research notebooks, which have a few data visualizations that might be of interest. There is also a few demo notebooks, that show how to use the scripts.
+There are a few jupyter notebooks in the `notebooks/` directory, which show some of the original research notebooks, which have a few data visualizations that might be of interest.
