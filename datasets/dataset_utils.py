@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 import torch
-import torchvision
+from torchvision import transforms
 
-to_tensor = torchvision.transforms.ToTensor()
+to_tensor = transforms.ToTensor()
+convert_to_pil = transforms.ToPILImage()
+
 draw_confidence_threshold = 0.65
 
 
@@ -89,13 +91,13 @@ def preprocess_image(model, filter_labels, device, transform, pil_image):
 
     if transform == 1:
         # zoomed crop
-        eyel_pos = (0.25, 0.4)
+        eyel_pos = (0.35, 0.4)
     elif transform == 2:
         # All face crop
-        eyel_pos = (0.35, 0.4)
+        eyel_pos = (0.25, 0.4)
 
     if eyel is not None and eyer is not None and keep_image:
-        return (
+        return convert_to_pil(
             align(
                 pil_image,
                 (

@@ -1,17 +1,13 @@
 import time
 from datetime import datetime
-from functools import partial
 from pathlib import Path
 
 import torch
-import torchvision
-from torchvision.datasets import ImageFolder
+from PIL import Image
 from tqdm import tqdm
 
 from dataset_utils import preprocess_image
 from linc_detection.models import detection
-
-convert_to_pil = torchvision.transforms.ToPILImage()
 
 # Params
 
@@ -72,26 +68,25 @@ def dataset_generator(
     print("Done.")
 
     # Create dataset
-    preprocess_image_args = partial(
-        preprocess_image, model, filter_labels.keys(), device, transform
-    )
 
-    image_ds = ImageFolder(input_path, preprocess_image_args)
     deleted_images = []
 
     print("Creating dataset...")
     output_path = Path(output_path) / "dataset-{}".format(datetime.today().strftime("%m-%d-%y"))
     output_path.mkdir()
 
-    for idx, (image, label) in enumerate(tqdm(image_ds)):
+    input_path = Path(input_path)
+
+    for image_path in tqdm(input_path.rglob("*.jpg")):
+        image = Image.open(image_path)
+        image = preprocess_image(model, filter_labels.keys(), device, transform, image)
         if image is not None:
-            original_path = Path(image_ds.samples[idx][0])
-            image_path = output_path.joinpath(original_path.parent.name, original_path.name)
-            if not image_path.parent.exists():
-                image_path.parent.mkdir(parents=True)
-            convert_to_pil(image).save(image_path)
+            output_image_path = output_path.joinpath(image_path.parent.name, image_path.name)
+            if not output_image_path.parent.exists():
+                output_image_path.parent.mkdir(parents=True)
+            image.save(output_image_path)
         else:
-            deleted_images.append(image_ds.samples[idx][0])
+            deleted_images.append(image_path)
 
     print("Done! {} were deleted. \n{}".format(len(deleted_images), deleted_images))
 
