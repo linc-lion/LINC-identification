@@ -23,6 +23,7 @@ def train(data_path, model_output_path, gallery_output_path=None):
     saved on model_output_path. If gallery_output_path is provided, a new gallery
     with the lions will be created there.
     Parameters
+
     ----------
     data_path : str
         Path to the folder containing the labeled images. They should be
@@ -70,19 +71,19 @@ def train(data_path, model_output_path, gallery_output_path=None):
     if gallery_output_path:
         print("Creating gallery...")
         # Create gallery (embeddings, image ids and labels)
-        gallery_path = Path(gallery_output_path) / datetime.today().strftime("%m-%d-%y")
-        gallery_path.mkdir(exist_ok=True)
+        gallery_output_path = Path(gallery_output_path) / datetime.today().strftime("%m-%d-%y")
+        gallery_output_path.mkdir(exist_ok=True)
         fixed_dl = learn.data.train_dl.new(shuffle=False, drop_last=False)
 
         embeddings = get_embeddings(learn, fixed_dl, pool=None)
         image_ids = get_image_ids(data_path / "train")
 
-        labels = np.array(learn.data.train_ds.y.classes)[learn.data.train_ds.y.items]
-        labels = [int(label) for label in labels]
+        labels = np.array(learn.data.train_ds.y.classes)[learn.data.train_ds.y.items].astype(int)
 
-        torch.save(embeddings, gallery_path / "embeddings.pt")
-        torch.save(labels, gallery_path / "labels.pt")
-        torch.save(image_ids, gallery_path / "face_image_ids.pt")
+        torch.save(embeddings, gallery_output_path / "embeddings.pt")
+        torch.save(labels, gallery_output_path / "labels.pt")
+        torch.save(image_ids, gallery_output_path / "face_image_ids.pt")
+
     print("Finished!")
 
 

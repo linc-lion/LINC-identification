@@ -118,7 +118,7 @@ def predict(
 
         try:
             image_id = int(re.search(r"image_(\d*)", img_name).group(1))
-        except ValueError:
+        except AttributeError:
             raise Exception("Could not parse image id from image name.")
 
         distances = sorted(distances, key=lambda x: x[0])

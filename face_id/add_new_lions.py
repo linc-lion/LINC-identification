@@ -55,8 +55,9 @@ def add_new_lions(new_lions_path, output_path, model_path, gallery_path):
     fixed_dl = incoming_data.train_dl.new(shuffle=False, drop_last=False)
     incoming_embeddings = get_embeddings(learn, fixed_dl, pool=None)
 
-    incoming_labels = np.array(incoming_data.train_ds.y.classes)[incoming_data.train_ds.y.items]
-    incoming_labels = [int(label) for label in incoming_labels]
+    incoming_labels = np.array(incoming_data.train_ds.y.classes)[
+        incoming_data.train_ds.y.items
+    ].astype(int)
 
     new_embeddings = torch.cat((disk_embeddings, incoming_embeddings))
     new_image_ids = get_image_ids(images_path, disk_image_ids)
